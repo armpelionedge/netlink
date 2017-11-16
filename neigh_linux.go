@@ -4,7 +4,7 @@ import (
 	"net"
 	"unsafe"
 
-	"github.com/vishvananda/netlink/nl"
+	"github.com/WigWagCo/netlink/nl"
 	"golang.org/x/sys/unix"
 )
 

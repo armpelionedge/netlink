@@ -5,7 +5,7 @@ import (
 	"net"
 	"strings"
 
-	"github.com/vishvananda/netlink/nl"
+	"github.com/WigWagCo/netlink/nl"
 	"github.com/vishvananda/netns"
 	"golang.org/x/sys/unix"
 )
