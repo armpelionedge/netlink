@@ -77,6 +77,8 @@ func applyFilter(flowList []ConntrackFlow, ipv4Filter *ConntrackFilter, ipv6Filt
 // TestConntrackSocket test the opening of a NETFILTER family socket
 func TestConntrackSocket(t *testing.T) {
 	skipUnlessRoot(t)
+	setUpNetlinkTestWithKModule(t, "nf_conntrack")
+	setUpNetlinkTestWithKModule(t, "nf_conntrack_netlink")
 
 	h, err := NewHandle(unix.NETLINK_NETFILTER)
 	CheckErrorFail(t, err)
@@ -90,6 +92,10 @@ func TestConntrackSocket(t *testing.T) {
 // Creates some flows and checks that they are correctly fetched from the conntrack table
 func TestConntrackTableList(t *testing.T) {
 	skipUnlessRoot(t)
+	setUpNetlinkTestWithKModule(t, "nf_conntrack")
+	setUpNetlinkTestWithKModule(t, "nf_conntrack_netlink")
+	setUpNetlinkTestWithKModule(t, "nf_conntrack_ipv4")
+	setUpNetlinkTestWithKModule(t, "nf_conntrack_ipv6")
 
 	// Creates a new namespace and bring up the loopback interface
 	origns, ns, h := nsCreateAndEnter(t)
@@ -97,6 +103,8 @@ func TestConntrackTableList(t *testing.T) {
 	defer origns.Close()
 	defer ns.Close()
 	defer runtime.UnlockOSThread()
+
+	setUpF(t, "/proc/sys/net/netfilter/nf_conntrack_acct", "1")
 
 	// Flush the table to start fresh
 	err := h.ConntrackTableFlush(ConntrackTable)
@@ -118,6 +126,10 @@ func TestConntrackTableList(t *testing.T) {
 			(flow.Forward.SrcPort >= 2000 && flow.Forward.SrcPort <= 2005) {
 			found++
 		}
+
+		if flow.Forward.Bytes == 0 && flow.Forward.Packets == 0 && flow.Reverse.Bytes == 0 && flow.Reverse.Packets == 0 {
+			t.Error("No traffic statistics are collected")
+		}
 	}
 	if found != 5 {
 		t.Fatalf("Found only %d flows over 5", found)
@@ -135,6 +147,9 @@ func TestConntrackTableList(t *testing.T) {
 // Creates some flows and then call the table flush
 func TestConntrackTableFlush(t *testing.T) {
 	skipUnlessRoot(t)
+	setUpNetlinkTestWithKModule(t, "nf_conntrack")
+	setUpNetlinkTestWithKModule(t, "nf_conntrack_netlink")
+	setUpNetlinkTestWithKModule(t, "nf_conntrack_ipv4")
 
 	// Creates a new namespace and bring up the loopback interface
 	origns, ns, h := nsCreateAndEnter(t)
@@ -194,6 +209,9 @@ func TestConntrackTableFlush(t *testing.T) {
 // Creates 2 group of flows then deletes only one group and validates the result
 func TestConntrackTableDelete(t *testing.T) {
 	skipUnlessRoot(t)
+	setUpNetlinkTestWithKModule(t, "nf_conntrack")
+	setUpNetlinkTestWithKModule(t, "nf_conntrack_netlink")
+	setUpNetlinkTestWithKModule(t, "nf_conntrack_ipv4")
 
 	// Creates a new namespace and bring up the loopback interface
 	origns, ns, h := nsCreateAndEnter(t)
